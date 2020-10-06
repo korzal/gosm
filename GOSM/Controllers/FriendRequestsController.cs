@@ -10,7 +10,7 @@ using GOSM.Models;
 namespace GOSM.Controllers
 {
     [Produces("application/json")]
-    [Route("api/[controller]")]
+    [Route("api/Users/{UserId}/[controller]")]
     [ApiController]
     public class FriendRequestsController : ControllerBase
     {
@@ -21,15 +21,30 @@ namespace GOSM.Controllers
             _context = context;
         }
 
-        // GET: api/FriendRequests
+        // GET: api/Users/{UserId}/FriendRequests
+        /// <summary>
+        /// Returns a list of friend requests of a user specified by ID
+        /// </summary>
+        /// <returns></returns>
+        /// <response code="200">Returns user list</response>
         [HttpGet]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<ActionResult<IEnumerable<FriendRequest>>> GetFriendRequestTable()
         {
             return await _context.FriendRequestTable.ToListAsync();
         }
 
-        // GET: api/FriendRequests/5
+        // GET: api/Users/{UserId}/FriendRequests/5
+        /// <summary>
+        /// Returns a friend request of a user specified by ID
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        /// <response code="200">Success, not returning anything</response>
+        /// <response code="404">If user does not exist</response>
         [HttpGet("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<FriendRequest>> GetFriendRequest(int id)
         {
             var friendRequest = await _context.FriendRequestTable.FindAsync(id);
@@ -42,10 +57,22 @@ namespace GOSM.Controllers
             return friendRequest;
         }
 
-        // PUT: api/FriendRequests/5
+        // PUT: api/Users/{UserId}/FriendRequests/5
         // To protect from overposting attacks, enable the specific properties you want to bind to, for
         // more details, see https://go.microsoft.com/fwlink/?linkid=2123754.
+        /// <summary>
+        /// (possibly unnecessary)
+        /// </summary>
+        /// <param name="friendRequest"></param>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        /// <response code="204">Successfully edited, not returning anything</response>
+        /// <response code="400">If any required fields are null</response>
+        /// <response code="404">If specified friend request id does not exist</response>
         [HttpPut("{id}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> PutFriendRequest(int id, FriendRequest friendRequest)
         {
             if (id != friendRequest.ID)
@@ -74,10 +101,19 @@ namespace GOSM.Controllers
             return NoContent();
         }
 
-        // POST: api/FriendRequests
+        // POST: api/Users/{UserId}/FriendRequests
         // To protect from overposting attacks, enable the specific properties you want to bind to, for
         // more details, see https://go.microsoft.com/fwlink/?linkid=2123754.
+        /// <summary>
+        /// Sends a new friend request
+        /// </summary>
+        /// <param name="friendRequest"></param>
+        /// <returns></returns>
+        /// <response code="201">If a friend request is sent successfully</response>
+        /// <response code="400">If all required fields are not filled</response>
         [HttpPost]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<FriendRequest>> PostFriendRequest(FriendRequest friendRequest)
         {
             _context.FriendRequestTable.Add(friendRequest);
@@ -86,8 +122,17 @@ namespace GOSM.Controllers
             return CreatedAtAction("GetFriendRequest", new { id = friendRequest.ID }, friendRequest);
         }
 
-        // DELETE: api/FriendRequests/5
+        // DELETE: api/Users/{UserId}/FriendRequests/5
+        /// <summary>
+        /// Deletes a friend request with the specified ID
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        /// <response code="200">If a friend request is deleted successfully</response>
+        /// <response code="404">If a friend request with the specified id is not found</response>
         [HttpDelete("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<FriendRequest>> DeleteFriendRequest(int id)
         {
             var friendRequest = await _context.FriendRequestTable.FindAsync(id);

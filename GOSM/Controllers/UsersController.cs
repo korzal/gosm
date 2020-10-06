@@ -40,7 +40,7 @@ namespace GOSM.Controllers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        /// <response code="200">Successfully edited, not returning anything</response>
+        /// <response code="200">Success, not returning anything</response>
         /// <response code="404">If user does not exist</response>
         [HttpGet("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
