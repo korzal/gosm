@@ -43,7 +43,7 @@ namespace GOSM
                     {
                         Name = "Kornelijus Zalikas",
                         Email = string.Empty,
-                        Url = new Uri("https://twitter.com/spboyer"),
+                        Url = new Uri("https://www.facebook.com/kornelijus.zal/"),
                     },
                     License = new OpenApiLicense
                     {
