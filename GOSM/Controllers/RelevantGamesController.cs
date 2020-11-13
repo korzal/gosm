@@ -31,7 +31,7 @@ namespace GOSM.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<ActionResult<IEnumerable<RelevantGames>>> GetRelevantGamesTable()
         {
-            return await _context.RelevantGamesTable.ToListAsync();
+            return await _context.RelevantGamesTable.Include(g => g.GameGenre).ToListAsync();
         }
 
         // GET: api/RelevantGames/5

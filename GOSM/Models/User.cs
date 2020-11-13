@@ -14,7 +14,7 @@ namespace GOSM.Models
         public string Password { get; set; }
         public string Email { get; set; }
         public DateTime CreationDate { get; set; }
-        public ICollection<RelevantGames> RelevantGames { get; set; }
+        public ICollection<RelevantGames> RelevantGamesList { get; set; }
 
     }
 }

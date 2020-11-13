@@ -68,7 +68,7 @@ namespace GOSM.Models
                 context.SaveChanges();
 
                 var query = from g in context.GameGenreTable
-                            orderby g.ID
+                            orderby g.ID descending
                             select g;
                 var genreList = query.ToList();
 
@@ -102,6 +102,22 @@ namespace GOSM.Models
                     {
                         Title = "Minecraft",
                         GameGenre = genreList[5]
+                    }
+                );
+                context.SaveChanges();
+
+                var newQuery = from g in context.RelevantGamesTable
+                                select g;
+                var gamesList = newQuery.ToList();
+
+                context.UserTable.AddRange(
+                    new User
+                    {
+                        Username = "Mike",
+                        Password = "Wazowski",
+                        Email = "wazowski@gmail.com",
+                        CreationDate = DateTime.Now,
+                        RelevantGamesList = gamesList
                     }
                 );
                 context.SaveChanges();

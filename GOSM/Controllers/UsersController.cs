@@ -31,7 +31,10 @@ namespace GOSM.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<ActionResult<IEnumerable<User>>> GetUserTable()
         {
-            return await _context.UserTable.ToListAsync();
+            return await _context.UserTable
+                .Include(g => g.RelevantGamesList)
+                .ThenInclude(ge => ge.GameGenre)
+                .ToListAsync();
         }
 
         // GET: api/Users/5
