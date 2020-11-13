@@ -19,5 +19,6 @@ namespace GOSM.Models
         public DbSet<Comment> CommentTable { get; set; }
         public DbSet<RelevantGames> RelevantGamesTable { get; set; }
         public DbSet<FriendRequest> FriendRequestTable { get; set; }
+        public DbSet<GameGenre> GameGenreTable { get; set; }
     }
 }

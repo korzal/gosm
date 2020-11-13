@@ -116,6 +116,7 @@ namespace GOSM.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<User>> PostUser(User user)
         {
+            user.CreationDate = DateTime.Now;
             _context.UserTable.Add(user);
             await _context.SaveChangesAsync();
 
