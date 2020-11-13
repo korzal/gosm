@@ -8,7 +8,7 @@ namespace GOSM.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "GameGenre",
+                name: "GameGenreTable",
                 columns: table => new
                 {
                     ID = table.Column<int>(nullable: false)
@@ -17,7 +17,7 @@ namespace GOSM.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_GameGenre", x => x.ID);
+                    table.PrimaryKey("PK_GameGenreTable", x => x.ID);
                 });
 
             migrationBuilder.CreateTable(
@@ -120,9 +120,9 @@ namespace GOSM.Migrations
                 {
                     table.PrimaryKey("PK_RelevantGamesTable", x => x.ID);
                     table.ForeignKey(
-                        name: "FK_RelevantGamesTable_GameGenre_GameGenreID",
+                        name: "FK_RelevantGamesTable_GameGenreTable_GameGenreID",
                         column: x => x.GameGenreID,
-                        principalTable: "GameGenre",
+                        principalTable: "GameGenreTable",
                         principalColumn: "ID",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
@@ -179,7 +179,7 @@ namespace GOSM.Migrations
                 name: "RelevantGamesTable");
 
             migrationBuilder.DropTable(
-                name: "GameGenre");
+                name: "GameGenreTable");
 
             migrationBuilder.DropTable(
                 name: "UserTable");

@@ -15,7 +15,7 @@ namespace GOSM.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "3.1.8")
+                .HasAnnotation("ProductVersion", "3.1.9")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128)
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
@@ -82,7 +82,7 @@ namespace GOSM.Migrations
 
                     b.HasKey("ID");
 
-                    b.ToTable("GameGenre");
+                    b.ToTable("GameGenreTable");
                 });
 
             modelBuilder.Entity("GOSM.Models.Post", b =>
