@@ -65,6 +65,7 @@ namespace GOSM.Models
                         Value = "Sandbox"
                     }
                 );
+                context.SaveChanges();
 
                 var query = from g in context.GameGenreTable
                             orderby g.ID
