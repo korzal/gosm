@@ -31,7 +31,11 @@ namespace GOSM.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<ActionResult<IEnumerable<Post>>> GetPostTable()
         {
-            return await _context.PostTable.ToListAsync();
+            return await _context.PostTable
+                .Include(u => u.User)
+                .ThenInclude(g => g.RelevantGamesList)
+                .ThenInclude(ge => ge.GameGenre)
+                .ToListAsync();
         }
 
         // GET: api/Posts/5

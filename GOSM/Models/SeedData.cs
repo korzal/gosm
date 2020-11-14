@@ -67,41 +67,48 @@ namespace GOSM.Models
                 );
                 context.SaveChanges();
 
-                var query = from g in context.GameGenreTable
-                            orderby g.ID descending
-                            select g;
-                var genreList = query.ToList();
-
                 context.RelevantGamesTable.AddRange(
                     new RelevantGames
                     {
                         Title = "Counter Strike: Global Offensive",
-                        GameGenre = genreList[0]
+                        GameGenre = (from g in context.GameGenreTable
+                                     where g.Value == "FPS"
+                                     select g).FirstOrDefault()
                     },
                     new RelevantGames
                     {
                         Title = "DOTA",
-                        GameGenre = genreList[1]
+                        GameGenre = (from g in context.GameGenreTable
+                                     where g.Value == "MOBA"
+                                     select g).FirstOrDefault()
                     },
                     new RelevantGames
                     {
                         Title = "World of Warcraft",
-                        GameGenre = genreList[2]
+                        GameGenre = (from g in context.GameGenreTable
+                                     where g.Value == "MMORPG"
+                                     select g).FirstOrDefault()
                     },
                     new RelevantGames
                     {
                         Title = "The Witcher 3: Wild Hunt",
-                        GameGenre = genreList[3]
+                        GameGenre = (from g in context.GameGenreTable
+                                     where g.Value == "RPG"
+                                     select g).FirstOrDefault()
                     },
                     new RelevantGames
                     {
                         Title = "Fortnite",
-                        GameGenre = genreList[4]
+                        GameGenre = (from g in context.GameGenreTable
+                                     where g.Value == "Battle royale"
+                                     select g).FirstOrDefault()
                     },
                     new RelevantGames
                     {
                         Title = "Minecraft",
-                        GameGenre = genreList[5]
+                        GameGenre = (from g in context.GameGenreTable
+                                     where g.Value == "Sandbox"
+                                     select g).FirstOrDefault()
                     }
                 );
                 context.SaveChanges();
@@ -109,6 +116,11 @@ namespace GOSM.Models
                 var newQuery = from g in context.RelevantGamesTable
                                 select g;
                 var gamesList = newQuery.ToList();
+
+                var newQuery2 = from g in context.RelevantGamesTable
+                                where g.Title == "Minecraft"
+                                select g;
+                var gamesList2 = newQuery2.ToList();
 
                 context.UserTable.AddRange(
                     new User
@@ -118,6 +130,34 @@ namespace GOSM.Models
                         Email = "wazowski@gmail.com",
                         CreationDate = DateTime.Now,
                         RelevantGamesList = gamesList
+                    },
+                    new User
+                    {
+                        Username = "Darko",
+                        Password = "poggers123",
+                        Email = "paradzikovic@gmail.com",
+                        CreationDate = DateTime.Now,
+                        RelevantGamesList = gamesList2
+                    }
+                );
+                context.SaveChanges();
+
+                context.PostTable.AddRange(
+                    new Post
+                    {
+                        Text = "Test post by Mike",
+                        TimeStamp = DateTime.Now,
+                        User = (from u in context.UserTable
+                                where u.Username == "Mike"
+                                select u).FirstOrDefault()
+                    },
+                    new Post
+                    {
+                        Text = "Test post by Darko",
+                        TimeStamp = DateTime.Now,
+                        User = (from u in context.UserTable
+                                where u.Username == "Darko"
+                                select u).FirstOrDefault()
                     }
                 );
                 context.SaveChanges();

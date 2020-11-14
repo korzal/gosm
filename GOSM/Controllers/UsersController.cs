@@ -114,11 +114,21 @@ namespace GOSM.Controllers
         /// <returns></returns>
         /// <response code="201">If an account is created successfully</response>
         /// <response code="400">If all required fields are not filled</response>
+        /// <response code="403">If username is already taken</response>
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<ActionResult<User>> PostUser(User user)
         {
+            //var queryName = (from u in _context.UserTable
+            //                 where u.Username == user.Username
+            //                 select u.Username);
+            //string username = queryName.First().ToString();
+            //if(username.ToLower() == user.Username.ToLower())
+            //{
+            //    return Forbid();
+            //}
             user.CreationDate = DateTime.Now;
             _context.UserTable.Add(user);
             await _context.SaveChangesAsync();
@@ -148,7 +158,7 @@ namespace GOSM.Controllers
             _context.UserTable.Remove(user);
             await _context.SaveChangesAsync();
 
-            return user;
+            return Ok(user);
         }
 
         private bool UserExists(int id)
