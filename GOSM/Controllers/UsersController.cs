@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using GOSM.Models;
+using GOSM.Controllers;
 
 namespace GOSM.Controllers
 {
@@ -181,6 +182,26 @@ namespace GOSM.Controllers
             if (user == null)
             {
                 return NotFound();
+            }
+            PostsController posts = new PostsController(_context);
+            FriendRequestsController friendRequests = new FriendRequestsController(_context);
+            
+            var relatedPosts = (from p in _context.PostTable
+                                where p.UserID == id
+                                select p).ToList();
+
+            var relatedFriendRequests = (from r in _context.FriendRequestTable
+                                         where r.RecipientID == id || r.SenderID == id
+                                         select r).ToList();
+
+            foreach(var post in relatedPosts)
+            {
+                await posts.DeletePost(post.ID);
+            }
+
+            foreach(var request in relatedFriendRequests)
+            {
+                await friendRequests.DeleteFriendRequest(request.ID);
             }
 
             _context.UserTable.Remove(user);

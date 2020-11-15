@@ -37,6 +37,23 @@ namespace GOSM.Controllers
                 .ToListAsync();
         }
 
+        // GET: api/Posts/PostsByGenre
+        /// <summary>
+        /// Returns a list of posts filtered by game genre
+        /// </summary>
+        /// <returns></returns>
+        /// <response code="200">Returns post list</response>
+        [HttpGet, Route("PostsByGenre/{genre}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<ActionResult<IEnumerable<Post>>> GetPostTableByGenre(GameGenre genre)
+        {
+            return await _context.PostTable
+                .Where(g => g.Tag == genre)
+                .Include(u => u.User)
+                .Include(c => c.CommentList)
+                .ToListAsync();
+        }
+
         // GET: api/Posts/5
         /// <summary>
         /// Returns a post with the specified ID

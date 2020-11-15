@@ -83,6 +83,20 @@ namespace GOSM.Models
                         Password = "poggers123",
                         Email = "paradzikovic@gmail.com",
                         CreationDate = DateTime.Now
+                    },
+                    new User
+                    {
+                        Username = "Bezos322",
+                        Password = "jeff",
+                        Email = "bezos@gmail.com",
+                        CreationDate = DateTime.Now
+                    },
+                    new User
+                    {
+                        Username = "Biden",
+                        Password = "topkek",
+                        Email = "biden@gmail.com",
+                        CreationDate = DateTime.Now
                     }
                 );
                 context.SaveChanges();
@@ -114,6 +128,7 @@ namespace GOSM.Models
                     new Post
                     {
                         Text = "Test post by Mike",
+                        Tag = GameGenre.Other,
                         TimeStamp = DateTime.Now,
                         User = (from u in context.UserTable
                                 where u.Username == "Mike"
@@ -122,9 +137,19 @@ namespace GOSM.Models
                     new Post
                     {
                         Text = "Test post by Darko",
+                        Tag = GameGenre.Other,
                         TimeStamp = DateTime.Now,
                         User = (from u in context.UserTable
                                 where u.Username == "Darko"
+                                select u).FirstOrDefault()
+                    },
+                    new Post
+                    {
+                        Text = "Test post by Biden",
+                        Tag = GameGenre.Fighting,
+                        TimeStamp = DateTime.Now,
+                        User = (from u in context.UserTable
+                                where u.Username == "Biden"
                                 select u).FirstOrDefault()
                     }
                 );
@@ -170,6 +195,58 @@ namespace GOSM.Models
                     }
 
                 );
+                context.SaveChanges();
+
+
+
+                context.FriendRequestTable.AddRange(
+                    new FriendRequest
+                    {
+                        IsAccepted = true,
+                        RequestDate = DateTime.Now,
+                        Sender = (from u in context.UserTable
+                                  where u.Username == "Mike"
+                                  select u).FirstOrDefault(),
+                        Recipient = (from u in context.UserTable
+                                     where u.Username == "Darko"
+                                     select u).FirstOrDefault()
+                    },
+                    new FriendRequest
+                    {
+                        IsAccepted = true,
+                        RequestDate = DateTime.Now,
+                        Sender = (from u in context.UserTable
+                                  where u.Username == "Bezos322"
+                                  select u).FirstOrDefault(),
+                        Recipient = (from u in context.UserTable
+                                     where u.Username == "Darko"
+                                     select u).FirstOrDefault()
+                    },
+                    new FriendRequest
+                    {
+                        IsAccepted = false,
+                        RequestDate = DateTime.Now,
+                        Sender = (from u in context.UserTable
+                                  where u.Username == "Bezos322"
+                                  select u).FirstOrDefault(),
+                        Recipient = (from u in context.UserTable
+                                     where u.Username == "Biden"
+                                     select u).FirstOrDefault()
+                    },
+                    new FriendRequest
+                    {
+                        IsAccepted = true,
+                        RequestDate = DateTime.Now,
+                        Sender = (from u in context.UserTable
+                                  where u.Username == "Darko"
+                                  select u).FirstOrDefault(),
+                        Recipient = (from u in context.UserTable
+                                     where u.Username == "Biden"
+                                     select u).FirstOrDefault()
+                    }
+
+                );
+
                 context.SaveChanges();
             }
         }

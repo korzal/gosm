@@ -23,7 +23,7 @@ namespace GOSM.Controllers
 
         // GET: api/Users/{UserId}/FriendRequests
         /// <summary>
-        /// Returns a list of friend requests received by a user specified by ID
+        /// Returns a list of active friend requests received by a user specified by ID
         /// </summary>
         /// <returns></returns>
         /// <response code="200">Returns user list</response>
@@ -33,6 +33,25 @@ namespace GOSM.Controllers
         {
             return await _context.FriendRequestTable
                 .Where(u => u.RecipientID == UserId)
+                .Where(u => u.IsAccepted == false)
+                //.Include(u1 => u1.Recipient)
+                .Include(u2 => u2.Sender)
+                .ToListAsync();
+        }
+
+        // GET: api/Users/{UserId}/FriendRequests/FriendList
+        /// <summary>
+        /// Returns a list of accepted friend requests of a user specified by ID
+        /// </summary>
+        /// <returns></returns>
+        /// <response code="200">Returns user list</response>
+        [HttpGet, Route("FriendList")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<ActionResult<IEnumerable<FriendRequest>>> GetFriendRequestList(int UserId)
+        {
+            return await _context.FriendRequestTable
+                .Where(u => u.RecipientID == UserId || u.SenderID == UserId)
+                .Where(u => u.IsAccepted == true)
                 //.Include(u1 => u1.Recipient)
                 .Include(u2 => u2.Sender)
                 .ToListAsync();
@@ -65,7 +84,7 @@ namespace GOSM.Controllers
         // To protect from overposting attacks, enable the specific properties you want to bind to, for
         // more details, see https://go.microsoft.com/fwlink/?linkid=2123754.
         /// <summary>
-        /// (possibly unnecessary)
+        /// Lets user accept a friend request (changing the state of isAccepted)
         /// </summary>
         /// <param name="friendRequest"></param>
         /// <param name="id"></param>
@@ -83,6 +102,13 @@ namespace GOSM.Controllers
             {
                 return BadRequest();
             }
+            friendRequest.Recipient = (from f in _context.FriendRequestTable
+                                       where f.ID == friendRequest.ID
+                                       select f.Recipient).FirstOrDefault();
+
+            friendRequest.Sender = (from f in _context.FriendRequestTable
+                                       where f.ID == friendRequest.ID
+                                       select f.Sender).FirstOrDefault();
 
             _context.Entry(friendRequest).State = EntityState.Modified;
 
