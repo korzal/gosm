@@ -32,8 +32,9 @@ namespace GOSM.Controllers
         public async Task<ActionResult<IEnumerable<User>>> GetUserTable()
         {
             return await _context.UserTable
-                .Include(g => g.RelevantGamesList)
-                .ThenInclude(ge => ge.GameGenre)
+                .Include(g => g.UserRelevantGamesList)
+                .ThenInclude(ge => ge.RelevantGames)
+                //.ThenInclude(ge => ge.GameGenre)
                 .ToListAsync();
         }
 
@@ -43,7 +44,7 @@ namespace GOSM.Controllers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        /// <response code="200">Success, not returning anything</response>
+        /// <response code="200">Success, return requested user</response>
         /// <response code="404">If user does not exist</response>
         [HttpGet("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -57,7 +58,12 @@ namespace GOSM.Controllers
                 return NotFound();
             }
 
-            return user;
+            user.UserRelevantGamesList = await _context.UserTable
+                .SelectMany(g => g.UserRelevantGamesList)
+                .Include(ge => ge.RelevantGames)
+                .ToListAsync();
+
+            return Ok(user);
         }
 
         // PUT: api/Users/5
@@ -78,10 +84,28 @@ namespace GOSM.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> PutUser(int id, User user)
         {
+            //var checkUser = await _context.UserTable.FindAsync(user.ID);
             if (id != user.ID)
             {
-                return BadRequest();
+                return BadRequest("ID provided as parameter does not match the serialized object.");
             }
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest("Invalid model object.");
+            }
+
+            var queryExisting = _context.UserTable
+                .Where(u => EF.Functions.Like(u.Username, user.Username)).FirstOrDefault();
+
+            if(queryExisting != null)
+            {
+                return Conflict("Username already exists.");
+            }
+
+            user.CreationDate = _context.UserTable
+                .Where(u => u.ID == user.ID)
+                .Select(u => u.CreationDate).FirstOrDefault();
 
             _context.Entry(user).State = EntityState.Modified;
 
@@ -113,22 +137,26 @@ namespace GOSM.Controllers
         /// <param name="user"></param>
         /// <returns></returns>
         /// <response code="201">If an account is created successfully</response>
-        /// <response code="400">If all required fields are not filled</response>
-        /// <response code="403">If username is already taken</response>
+        /// <response code="400">If all required fields are not filled, or non 0 user ID is provided</response>
+        /// <response code="409">If username is already taken</response>
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
         public async Task<ActionResult<User>> PostUser(User user)
         {
-            //var queryName = (from u in _context.UserTable
-            //                 where u.Username == user.Username
-            //                 select u.Username);
-            //string username = queryName.First().ToString();
-            //if(username.ToLower() == user.Username.ToLower())
-            //{
-            //    return Forbid();
-            //}
+            if (user.ID != 0)
+            {
+                return BadRequest("User ID should not be provided or left at 0, as it is managed by the database.");
+            }
+            var queryExisting = _context.UserTable
+                .Where(u => EF.Functions.Like(u.Username, user.Username)).FirstOrDefault();
+
+            if(queryExisting != null)
+            {
+                return Conflict("Username already exists.");
+            }
+
             user.CreationDate = DateTime.Now;
             _context.UserTable.Add(user);
             await _context.SaveChangesAsync();

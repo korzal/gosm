@@ -23,20 +23,24 @@ namespace GOSM.Controllers
 
         // GET: api/Users/{UserId}/FriendRequests
         /// <summary>
-        /// Returns a list of friend requests of a user specified by ID
+        /// Returns a list of friend requests received by a user specified by ID
         /// </summary>
         /// <returns></returns>
         /// <response code="200">Returns user list</response>
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<FriendRequest>>> GetFriendRequestTable()
+        public async Task<ActionResult<IEnumerable<FriendRequest>>> GetFriendRequestTable(int UserId)
         {
-            return await _context.FriendRequestTable.ToListAsync();
+            return await _context.FriendRequestTable
+                .Where(u => u.RecipientID == UserId)
+                //.Include(u1 => u1.Recipient)
+                .Include(u2 => u2.Sender)
+                .ToListAsync();
         }
 
         // GET: api/Users/{UserId}/FriendRequests/5
         /// <summary>
-        /// Returns a friend request of a user specified by ID
+        /// Returns a friend request specified by ID
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
@@ -108,14 +112,78 @@ namespace GOSM.Controllers
         /// Sends a new friend request
         /// </summary>
         /// <param name="friendRequest"></param>
+        /// <param name="UserId"></param>
         /// <returns></returns>
+        /// <response code="200">If a friend request had already been sent by the recipient</response>
         /// <response code="201">If a friend request is sent successfully</response>
-        /// <response code="400">If all required fields are not filled</response>
+        /// <response code="400">If all required fields are not filled, or non 0 ID for friend request is provided</response>
+        /// <response code="404">If sender or recipient of provided IDs do not exist</response>
+        /// <response code="409">If a friend request had already been sent to the same user by the sender</response>
         [HttpPost]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult<FriendRequest>> PostFriendRequest(FriendRequest friendRequest)
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
+        public async Task<ActionResult<FriendRequest>> PostFriendRequest(int UserId, FriendRequest friendRequest)
         {
+            if (friendRequest.ID != 0)
+            {
+                return BadRequest("Friend request ID should not be provided or left at 0, as it is managed by the database.");
+            }
+
+            var localSender = await _context.UserTable.FindAsync(UserId);
+            if (localSender != null)
+            {
+                _context.Entry(localSender).State = EntityState.Detached;
+            }
+            else
+            {
+                return NotFound("Sender with the provided ID does not exist.");
+            }
+
+            var localReceiver = await _context.UserTable.FindAsync(friendRequest.RecipientID);
+            if(localReceiver != null)
+            {
+                _context.Entry(localReceiver).State = EntityState.Detached;
+            }
+            else
+            {
+                return NotFound("Recipient with the provided ID does not exist.");
+            }
+
+            if(localSender.ID == localReceiver.ID)
+            {
+                return Conflict("Cannot send friend request to self.");
+            }
+
+            var compareRequest = (from f in _context.FriendRequestTable
+                                    where f.SenderID == localSender.ID
+                                    where f.RecipientID == localReceiver.ID
+                                    select f).FirstOrDefault();
+
+            if(compareRequest != null)
+            {
+                return Conflict("Friend request has already been sent to specified user.");
+            }
+            else
+            {
+                compareRequest = (from f in _context.FriendRequestTable
+                                  where f.SenderID == localReceiver.ID
+                                  where f.RecipientID == localSender.ID
+                                  select f).FirstOrDefault();
+
+                if(compareRequest != null)
+                {
+                    _context.FriendRequestTable.Find(compareRequest.ID).IsAccepted = true;
+                    return Ok();
+                }
+            }
+             
+
+            friendRequest.IsAccepted = false;
+            friendRequest.RequestDate = DateTime.Now;
+            friendRequest.SenderID = UserId;
             _context.FriendRequestTable.Add(friendRequest);
             await _context.SaveChangesAsync();
 
@@ -138,13 +206,13 @@ namespace GOSM.Controllers
             var friendRequest = await _context.FriendRequestTable.FindAsync(id);
             if (friendRequest == null)
             {
-                return NotFound();
+                return NotFound("Friend request of specified ID could not be found.");
             }
 
             _context.FriendRequestTable.Remove(friendRequest);
             await _context.SaveChangesAsync();
 
-            return friendRequest;
+            return Ok(friendRequest);
         }
 
         private bool FriendRequestExists(int id)

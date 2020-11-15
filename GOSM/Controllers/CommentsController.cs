@@ -29,9 +29,22 @@ namespace GOSM.Controllers
         /// <response code="200">Returns comment list</response>
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<Comment>>> GetCommentTable()
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<IEnumerable<Comment>>> GetCommentTable(int postId)
         {
-            return await _context.CommentTable.ToListAsync();
+            var retrievePost = (from p in _context.PostTable
+                                where p.ID == postId
+                                select p).FirstOrDefault();
+            if(retrievePost == null)
+            {
+                return BadRequest("A post with the specified ID does not exist.");
+            }
+
+            return Ok(await _context.CommentTable
+                .Where(p => p.PostID == postId)
+                .Include(u => u.User)
+                //.Include(p => p.Post)
+                .ToListAsync());
         }
 
         // GET: api/Posts/{postId}/Comments/5
@@ -54,7 +67,7 @@ namespace GOSM.Controllers
                 return NotFound();
             }
 
-            return comment;
+            return Ok(comment);
         }
 
         // PUT: api/Posts/{postId}/Comments/5
@@ -72,10 +85,33 @@ namespace GOSM.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutComment(int id, Comment comment)
         {
+            var localComment = await _context.CommentTable.FindAsync(id);
+            if (localComment != null)
+            {
+                _context.Entry(localComment).State = EntityState.Detached;
+            }
+            else
+            {
+                return NotFound("Post with the specified ID does not exist.");
+            }
+
             if (id != comment.ID)
             {
-                return BadRequest();
+                return BadRequest("ID provided as parameter does not match the serialized object.");
             }
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest("Invalid model object.");
+            }
+
+            comment.TimeStamp = _context.CommentTable
+                .Where(u => u.ID == comment.ID)
+                .Select(u => u.TimeStamp).FirstOrDefault();
+
+            comment.UserID = _context.CommentTable
+                .Where(u => u.ID == comment.ID)
+                .Select(u => u.UserID).FirstOrDefault();
 
             _context.Entry(comment).State = EntityState.Modified;
 
@@ -107,12 +143,17 @@ namespace GOSM.Controllers
         /// <param name="comment"></param>
         /// <returns></returns>
         /// <response code="201">If a comment is posted successfully</response>
-        /// <response code="400">If all required fields are not filled</response>
+        /// <response code="400">If all required fields are not filled, or non 0 comment ID is provided</response>
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<Comment>> PostComment(Comment comment)
         {
+            if (comment.ID != 0)
+            {
+                return BadRequest("Comment ID should not be provided or left at 0, as it is managed by the database.");
+            }
+            comment.TimeStamp = DateTime.Now;
             _context.CommentTable.Add(comment);
             await _context.SaveChangesAsync();
 

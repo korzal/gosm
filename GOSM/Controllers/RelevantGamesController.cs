@@ -31,7 +31,9 @@ namespace GOSM.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<ActionResult<IEnumerable<RelevantGames>>> GetRelevantGamesTable()
         {
-            return await _context.RelevantGamesTable.Include(g => g.GameGenre).ToListAsync();
+            return await _context.RelevantGamesTable
+                //.Include(u => u.UserRelevantGamesList)
+                .ToListAsync();
         }
 
         // GET: api/RelevantGames/5
@@ -80,6 +82,19 @@ namespace GOSM.Controllers
                 return BadRequest();
             }
 
+            if (!ModelState.IsValid)
+            {
+                return BadRequest("Invalid model object");
+            }
+
+            var queryExisting = _context.RelevantGamesTable
+                .Where(g => EF.Functions.Like(g.Title, relevantGames.Title)).FirstOrDefault();
+
+            if (queryExisting != null)
+            {
+                return Conflict("The title already exists.");
+            }
+
             _context.Entry(relevantGames).State = EntityState.Modified;
 
             try
@@ -110,12 +125,26 @@ namespace GOSM.Controllers
         /// <param name="relevantGames"></param>
         /// <returns></returns>
         /// <response code="201">If a new game is added successfully</response>
-        /// <response code="400">If all required fields are not filled</response>
+        /// <response code="400">If all required fields are not filled, or non 0 relevant games ID is provided</response>
+        /// <response code="409">If the client is attempting to post a duplicate entry</response>
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
         public async Task<ActionResult<RelevantGames>> PostRelevantGames(RelevantGames relevantGames)
         {
+            if (relevantGames.ID != 0)
+            {
+                return BadRequest("relevantGames ID should not be provided or left at 0, as it is managed by the database.");
+            }
+            var queryExisting = _context.RelevantGamesTable
+                .Where(g => EF.Functions.Like(g.Title, relevantGames.Title)).FirstOrDefault();
+
+            if(queryExisting != null)
+            {
+                return Conflict("The title already exists.");
+            }
+
             _context.RelevantGamesTable.Add(relevantGames);
             await _context.SaveChangesAsync();
 
@@ -144,7 +173,7 @@ namespace GOSM.Controllers
             _context.RelevantGamesTable.Remove(relevantGames);
             await _context.SaveChangesAsync();
 
-            return relevantGames;
+            return Ok(relevantGames);
         }
 
         private bool RelevantGamesExists(int id)

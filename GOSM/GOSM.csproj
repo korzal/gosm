@@ -12,9 +12,28 @@
   <ItemGroup>
     <Compile Remove="Migrations\20201113185042_Initial.cs" />
     <Compile Remove="Migrations\20201113185042_Initial.Designer.cs" />
+    <Compile Remove="Migrations\20201114172737_relevant games many-to-many fix.cs" />
+    <Compile Remove="Migrations\20201114172737_relevant games many-to-many fix.Designer.cs" />
+    <Compile Remove="Migrations\20201114194010_many-to-many fix yet again.cs" />
+    <Compile Remove="Migrations\20201114194010_many-to-many fix yet again.Designer.cs" />
+    <Compile Remove="Migrations\20201114194340_many-to-many fix yet againn.cs" />
+    <Compile Remove="Migrations\20201114194340_many-to-many fix yet againn.Designer.cs" />
+    <Compile Remove="Migrations\20201115135028_test.cs" />
+    <Compile Remove="Migrations\20201115135028_test.Designer.cs" />
+    <Compile Remove="Migrations\20201115135659_one-to-many fix again.cs" />
+    <Compile Remove="Migrations\20201115135659_one-to-many fix again.Designer.cs" />
+    <Compile Remove="Migrations\20201115141240_one-to-many posts.cs" />
+    <Compile Remove="Migrations\20201115141240_one-to-many posts.Designer.cs" />
+    <Compile Remove="Migrations\20201115142825_TestAfterForceRemove.cs" />
+    <Compile Remove="Migrations\20201115142825_TestAfterForceRemove.Designer.cs" />
+    <Compile Remove="Migrations\20201115143045_TestAfterForceRemove.cs" />
+    <Compile Remove="Migrations\20201115143045_TestAfterForceRemove.Designer.cs" />
+    <Compile Remove="Migrations\20201115143220_TestAfterForceRemove.cs" />
+    <Compile Remove="Migrations\20201115143220_TestAfterForceRemove.Designer.cs" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="3.1.10" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="3.1.8" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="3.1.9" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="3.1.9" />
@@ -23,6 +42,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="3.1.4" />
+    <PackageReference Include="newtonsoft.json" Version="12.0.3" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="5.5.0" />
   </ItemGroup>
 

@@ -4,14 +4,16 @@ using GOSM.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace GOSM.Migrations
 {
     [DbContext(typeof(Database))]
-    partial class DatabaseModelSnapshot : ModelSnapshot
+    [Migration("20201114175338_relevant games many-to-many fix")]
+    partial class relevantgamesmanytomanyfix
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -26,9 +28,6 @@ namespace GOSM.Migrations
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<int?>("PostID")
-                        .HasColumnType("int");
-
                     b.Property<string>("Text")
                         .HasColumnType("nvarchar(max)");
 
@@ -39,8 +38,6 @@ namespace GOSM.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("ID");
-
-                    b.HasIndex("PostID");
 
                     b.HasIndex("UserID");
 
@@ -105,11 +102,13 @@ namespace GOSM.Migrations
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
+                    b.Property<int>("GameGenreID")
+                        .HasColumnType("int");
+
                     b.Property<int>("Genre")
                         .HasColumnType("int");
 
                     b.Property<string>("Title")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("ID");
@@ -128,17 +127,13 @@ namespace GOSM.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Email")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Password")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Username")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(20)")
-                        .HasMaxLength(20);
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("ID");
 
@@ -162,10 +157,6 @@ namespace GOSM.Migrations
 
             modelBuilder.Entity("GOSM.Models.Comment", b =>
                 {
-                    b.HasOne("GOSM.Models.Post", "Post")
-                        .WithMany("CommentList")
-                        .HasForeignKey("PostID");
-
                     b.HasOne("GOSM.Models.User", "User")
                         .WithMany()
                         .HasForeignKey("UserID")
@@ -196,7 +187,7 @@ namespace GOSM.Migrations
             modelBuilder.Entity("GOSM.Models.UserRelevantGames", b =>
                 {
                     b.HasOne("GOSM.Models.RelevantGames", "RelevantGames")
-                        .WithMany()
+                        .WithMany("UserRelevantGamesList")
                         .HasForeignKey("RelevantGamesID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();

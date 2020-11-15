@@ -5,10 +5,17 @@ using System.Threading.Tasks;
 
 namespace GOSM.Models
 {
-    public class GameGenre
+    public enum GameGenre
     {
-        public int ID { get; set; }
-        public string Value { get; set; }
-
+        FPS,
+        MOBA,
+        RTS,
+        RPG,
+        MMORPG,
+        Rhythm,
+        Fighting,
+        Sandbox,
+        Other
     }
+
 }

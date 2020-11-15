@@ -33,8 +33,7 @@ namespace GOSM.Controllers
         {
             return await _context.PostTable
                 .Include(u => u.User)
-                .ThenInclude(g => g.RelevantGamesList)
-                .ThenInclude(ge => ge.GameGenre)
+                .Include(c => c.CommentList)
                 .ToListAsync();
         }
 
@@ -55,9 +54,9 @@ namespace GOSM.Controllers
 
             if (post == null)
             {
-                return NotFound();
+                return NotFound("");
             }
-            //test
+
             return post;
         }
 
@@ -79,10 +78,33 @@ namespace GOSM.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> PutPost(int id, Post post)
         {
+            var localPost = await _context.PostTable.FindAsync(id);
+            if(localPost != null)
+            {
+                _context.Entry(localPost).State = EntityState.Detached;
+            }
+            else
+            {
+                return NotFound("Post with the specified ID does not exist.");
+            }
+            
             if (id != post.ID)
             {
-                return BadRequest();
+                return BadRequest("ID provided as parameter does not match the serialized object.");
             }
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest("Invalid model object.");
+            }
+
+            post.TimeStamp = _context.PostTable
+                .Where(u => u.ID == post.ID)
+                .Select(u => u.TimeStamp).FirstOrDefault();
+
+            post.UserID = _context.PostTable
+                .Where(u => u.ID == post.ID)
+                .Select(u => u.UserID).FirstOrDefault();
 
             _context.Entry(post).State = EntityState.Modified;
 
@@ -114,12 +136,17 @@ namespace GOSM.Controllers
         /// <param name="post"></param>
         /// <returns></returns>
         /// <response code="201">If a post is posted successfully</response>
-        /// <response code="400">If all required fields are not filled</response>
+        /// <response code="400">If all required fields are not filled, or non 0 post ID provided</response>
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<Post>> PostPost(Post post)
         {
+            if (post.ID != 0)
+            {
+                return BadRequest("Post ID should not be provided or left at 0, as it is managed by the database.");
+            }
+            post.TimeStamp = DateTime.Now;
             _context.PostTable.Add(post);
             await _context.SaveChangesAsync();
 
@@ -144,7 +171,11 @@ namespace GOSM.Controllers
             {
                 return NotFound();
             }
+            var relatedComments = (from c in _context.CommentTable
+                      where c.PostID == id
+                      select c).ToList();
 
+            _context.CommentTable.RemoveRange(relatedComments);
             _context.PostTable.Remove(post);
             await _context.SaveChangesAsync();
 
