@@ -11,6 +11,7 @@ using GOSM.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 
 namespace GOSM.Services
 {
@@ -19,8 +20,8 @@ namespace GOSM.Services
         AuthenticateResponse Authenticate(AuthenticateRequest model, string ipAddress);
         AuthenticateResponse RefreshToken(string token, string ipAddress);
         bool RevokeToken(string token, string ipAddress);
-        Task<ActionResult<IEnumerable<User>>> GetUserTable();
-        User GetById(int id);
+        //IEnumerable<User> GetUserTable();
+        //User GetUser(int id);
     }
 
     public class UserService : IUserService
@@ -101,19 +102,58 @@ namespace GOSM.Services
             return true;
         }
 
-        public async Task<ActionResult<IEnumerable<User>>> GetUserTable()
+        public IEnumerable<User> GetUserTable()
         {
-            return await _context.UserTable
+            return _context.UserTable
                 .Include(g => g.UserRelevantGamesList)
                 .ThenInclude(ge => ge.RelevantGames)
                 //.ThenInclude(ge => ge.GameGenre)
-                .ToListAsync();
+                .ToList();
         }
 
-        public User GetById(int id)
-        {
-            return _context.UserTable.Find(id);
-        }
+        //public User GetUser(int id)
+        //{
+            
+            
+        //    return user;
+        //}
+
+        //public User PutUser(int id, User user)
+        //{
+        //    //var checkUser = await _context.UserTable.FindAsync(user.ID);
+
+        //    var queryExisting = _context.UserTable
+        //        .Where(u => EF.Functions.Like(u.Username, user.Username)).FirstOrDefault();
+
+        //    if (queryExisting != null)
+        //    {
+        //        return Conflict("Username already exists.");
+        //    }
+
+        //    user.CreationDate = _context.UserTable
+        //        .Where(u => u.ID == user.ID)
+        //        .Select(u => u.CreationDate).FirstOrDefault();
+
+        //    _context.Entry(user).State = EntityState.Modified;
+
+        //    try
+        //    {
+        //        _context.SaveChanges();
+        //    }
+        //    catch (DbUpdateConcurrencyException)
+        //    {
+        //        if (!UserExists(id))
+        //        {
+        //            return NotFound();
+        //        }
+        //        else
+        //        {
+        //            throw;
+        //        }
+        //    }
+
+        //    return NoContent();
+        //}
 
         // helper methods
 
