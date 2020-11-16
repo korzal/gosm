@@ -5,6 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using System.Text.Json.Serialization;
 
 namespace GOSM.Models
 {
@@ -20,6 +21,9 @@ namespace GOSM.Models
         public string Email { get; set; }
         public DateTime CreationDate { get; set; }
         public virtual ICollection<UserRelevantGames> UserRelevantGamesList { get; set; }
+
+        [JsonIgnore]
+        public List<RefreshToken> RefreshTokens { get; set; }
 
     }
 }

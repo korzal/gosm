@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using GOSM.Models;
 using GOSM.Controllers;
+using GOSM.Services;
 
 namespace GOSM.Controllers
 {
@@ -15,11 +16,11 @@ namespace GOSM.Controllers
     [ApiController]
     public class UsersController : ControllerBase
     {
-        private readonly Database _context;
+        private IUserService _userService;
 
-        public UsersController(Database context)
+        public UsersController(IUserService userService)
         {
-            _context = context;
+            _userService = userService;
         }
 
         // GET: api/Users
@@ -30,13 +31,10 @@ namespace GOSM.Controllers
         /// <response code="200">Returns user list</response>
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<User>>> GetUserTable()
+        public IActionResult GetUserTable()
         {
-            return await _context.UserTable
-                .Include(g => g.UserRelevantGamesList)
-                .ThenInclude(ge => ge.RelevantGames)
-                //.ThenInclude(ge => ge.GameGenre)
-                .ToListAsync();
+            var users = _userService.GetUserTable();
+            return Ok(users);
         }
 
         // GET: api/Users/5
