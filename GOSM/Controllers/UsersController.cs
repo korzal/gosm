@@ -9,6 +9,7 @@ using GOSM.Models;
 using GOSM.Controllers;
 using GOSM.Services;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace GOSM.Controllers
 {
@@ -19,59 +20,14 @@ namespace GOSM.Controllers
     public class UsersController : ControllerBase
     {
         private readonly Database _context;
-        private IUserService _userService;
+        //private IUserService _userService;
 
-        public UsersController(IUserService userService, Database context)
+        public UsersController(Database context)//IUserService userService, Database context)
         {
-            _userService = userService;
+            //_userService = userService;
             _context = context;
         }
 
-        [AllowAnonymous]
-        [HttpPost("authenticate")]
-        public IActionResult Authenticate([FromBody] AuthenticateRequest model)
-        {
-            var response = _userService.Authenticate(model, ipAddress());
-
-            if (response == null)
-                return BadRequest(new { message = "Username or password is incorrect" });
-
-            setTokenCookie(response.RefreshToken);
-
-            return Ok(response);
-        }
-
-        [AllowAnonymous]
-        [HttpPost("refresh-token")]
-        public IActionResult RefreshToken()
-        {
-            var refreshToken = Request.Cookies["refreshToken"];
-            var response = _userService.RefreshToken(refreshToken, ipAddress());
-
-            if (response == null)
-                return Unauthorized(new { message = "Invalid token" });
-
-            setTokenCookie(response.RefreshToken);
-
-            return Ok(response);
-        }
-
-        [HttpPost("revoke-token")]
-        public IActionResult RevokeToken([FromBody] RevokeTokenRequest model)
-        {
-            // accept token from request body or cookie
-            var token = model.Token ?? Request.Cookies["refreshToken"];
-
-            if (string.IsNullOrEmpty(token))
-                return BadRequest(new { message = "Token is required" });
-
-            var response = _userService.RevokeToken(token, ipAddress());
-
-            if (!response)
-                return NotFound(new { message = "Token not found" });
-
-            return Ok(new { message = "Token revoked" });
-        }
 
         // GET: api/Users
         /// <summary>
@@ -79,8 +35,10 @@ namespace GOSM.Controllers
         /// </summary>
         /// <returns></returns>
         /// <response code="200">Returns user list</response>
+        /// <response code="401">Client isn't authorized to perform this action</response>
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<ActionResult<IEnumerable<User>>> GetUserTable()
         {
             return await _context.UserTable
@@ -98,9 +56,11 @@ namespace GOSM.Controllers
         /// <returns></returns>
         /// <response code="200">Success, return requested user</response>
         /// <response code="404">If user does not exist</response>
+        /// <response code="401">Client isn't authorized to perform this action</response>
         [HttpGet("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<ActionResult<User>> GetUser(int id)
         {
             var user = await _context.UserTable.FindAsync(id);
@@ -128,12 +88,16 @@ namespace GOSM.Controllers
         /// <response code="204">Successfully edited, not returning anything</response>
         /// <response code="400">If any required fields are null</response>
         /// <response code="404">If specified user id does not exist</response>
+        /// <response code="401">Client isn't authorized to perform this action</response>
         [HttpPut("{id}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> PutUser(int id, User user)
         {
+            var username = GetUsernameFromClaims(HttpContext.User.Identity as ClaimsIdentity);
+
             //var checkUser = await _context.UserTable.FindAsync(user.ID);
             if (id != user.ID)
             {
@@ -145,10 +109,15 @@ namespace GOSM.Controllers
                 return BadRequest("Invalid model object.");
             }
 
+            if (username != user.Username && username != "admin")
+            {
+                return Unauthorized("Only the user can edit his own info.");
+            }
+
             var queryExisting = _context.UserTable
                 .Where(u => EF.Functions.Like(u.Username, user.Username)).FirstOrDefault();
 
-            if(queryExisting != null)
+            if(queryExisting != null && queryExisting.Username != user.Username)
             {
                 return Conflict("Username already exists.");
             }
@@ -189,10 +158,12 @@ namespace GOSM.Controllers
         /// <response code="201">If an account is created successfully</response>
         /// <response code="400">If all required fields are not filled, or non 0 user ID is provided</response>
         /// <response code="409">If username is already taken</response>
+        /// <response code="401">Client isn't authorized to perform this action</response>
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status409Conflict)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<ActionResult<User>> PostUser(User user)
         {
             if (user.ID != 0)
@@ -214,6 +185,103 @@ namespace GOSM.Controllers
             return CreatedAtAction("GetUser", new { id = user.ID }, user);
         }
 
+        // POST: api/Users/{id}/AddRelevantGame
+        // To protect from overposting attacks, enable the specific properties you want to bind to, for
+        // more details, see https://go.microsoft.com/fwlink/?linkid=2123754.
+        /// <summary>
+        /// Adds a relevant game to user specified by id
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="relevantGame"></param>
+        /// <returns></returns>
+        /// <response code="201">If a relevant game is added successfully</response>
+        /// <response code="400">If all required fields are not filled</response>
+        /// <response code="409">If relevant game is already added to provided account</response>
+        /// <response code="401">Client isn't authorized to perform this action</response>
+        [HttpPost, Route("{id}/AddRelevantGame")]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public async Task<ActionResult<UserRelevantGames>> PostRelevantGame(int id, UserRelevantGames relevantGame)
+        {
+            var username = GetUsernameFromClaims(HttpContext.User.Identity as ClaimsIdentity);
+
+            var checkUser = await _context.UserTable.FindAsync(id);
+            if (checkUser == null)
+            {
+                return NotFound("User with specified UserId was not found.");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest("Invalid model object.");
+            }
+
+            if (username != checkUser.Username && username != "admin")
+            {
+                return Unauthorized("Only the user can add his own relevant games.");
+            }
+
+            var queryExisting = _context.UserRelevantGamesTable
+                .Where(u => u.RelevantGames == relevantGame.RelevantGames).FirstOrDefault();
+
+            if (queryExisting != null)
+            {
+                return Conflict("Relevant game is already added to this account.");
+            }
+
+            _context.UserRelevantGamesTable.Add(relevantGame);
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction("GetRelevantGame", relevantGame);
+
+        }
+
+        // DELETE: api/Users/{id}/DeleteRelevantGame/{gameId}
+        /// <summary>
+        /// Deletes a relevant game specified by gameId from a user specified by id
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="gameId"></param>
+        /// <returns></returns>
+        /// <response code="200">If an account is deleted successfully</response>
+        /// <response code="404">If an account with the specified id is not found</response>
+        /// <response code="401">Client isn't authorized to perform this action</response>
+        [HttpDelete, Route("{id}/DeleteRelevantGame/{gameId}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public async Task<ActionResult<UserRelevantGames>> DeleteRelevantGame(int id, int gameId)
+        {
+            var username = GetUsernameFromClaims(HttpContext.User.Identity as ClaimsIdentity);
+            
+            var user = await _context.UserTable.FindAsync(id);
+            if (user == null)
+            {
+                return NotFound("User with the specified id does not exist.");
+            }
+
+            if (username != user.Username && username != "admin")
+            {
+                return Unauthorized("Only the user can delete his own relevant games.");
+            }
+
+            var game = (from g in _context.UserRelevantGamesTable
+                        where g.UserID == id && g.RelevantGamesID == gameId
+                        select g).FirstOrDefault();
+
+            if(game == null)
+            {
+                return NotFound("Game with the specified gameId does not belong to this user.");
+            }
+
+            _context.UserRelevantGamesTable.Remove(game);
+            await _context.SaveChangesAsync();
+
+            return Ok(game);
+        }
+
         // DELETE: api/Users/5
         /// <summary>
         /// Deletes a user with the specified ID
@@ -222,16 +290,26 @@ namespace GOSM.Controllers
         /// <returns></returns>
         /// <response code="200">If an account is deleted successfully</response>
         /// <response code="404">If an account with the specified id is not found</response>
+        /// <response code="401">Client isn't authorized to perform this action</response>
         [HttpDelete("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<ActionResult<User>> DeleteUser(int id)
         {
+            var username = GetUsernameFromClaims(HttpContext.User.Identity as ClaimsIdentity);
+
             var user = await _context.UserTable.FindAsync(id);
             if (user == null)
             {
                 return NotFound();
             }
+
+            if (username != "admin" && username != user.Username)
+            {
+                return Unauthorized("Only the admin and the user can delete his own account.");
+            }
+
             PostsController posts = new PostsController(_context);
             FriendRequestsController friendRequests = new FriendRequestsController(_context);
             
@@ -264,33 +342,16 @@ namespace GOSM.Controllers
             return _context.UserTable.Any(e => e.ID == id);
         }
 
-        [HttpGet("{id}/refresh-tokens")]
-        public IActionResult GetRefreshTokens(int id)
+        private string GetUsernameFromClaims(ClaimsIdentity claimsIdentity)
         {
-            var user = _context.UserTable.Find(id);
-            if (user == null) return NotFound();
-
-            return Ok(user.RefreshTokens);
-        }
-
-        // helper methods
-
-        private void setTokenCookie(string token)
-        {
-            var cookieOptions = new CookieOptions
+            var claims = claimsIdentity.Claims;
+            var usernameClaim = claims.Where(c => c.Type == "Username").FirstOrDefault();
+            if (usernameClaim == null)
             {
-                HttpOnly = true,
-                Expires = DateTime.UtcNow.AddDays(7)
-            };
-            Response.Cookies.Append("refreshToken", token, cookieOptions);
+                throw new NullReferenceException("Authorized user provided no valid username claim. Definitely internal error.");
+            }
+            return usernameClaim.Value;
         }
 
-        private string ipAddress()
-        {
-            if (Request.Headers.ContainsKey("X-Forwarded-For"))
-                return Request.Headers["X-Forwarded-For"];
-            else
-                return HttpContext.Connection.RemoteIpAddress.MapToIPv4().ToString();
-        }
     }
 }

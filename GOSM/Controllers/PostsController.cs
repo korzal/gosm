@@ -6,13 +6,15 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using GOSM.Models;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace GOSM.Controllers
 {
     [Produces("application/json")]
     [Route("api/[controller]")]
     [ApiController]
-
+    [Authorize(AuthenticationSchemes = Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme)]
     public class PostsController : ControllerBase
     {
         private readonly Database _context;
@@ -96,6 +98,12 @@ namespace GOSM.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> PutPost(int id, Post post)
         {
+            var username = GetUsernameFromClaims(HttpContext.User.Identity as ClaimsIdentity);
+            if(username != post.User.Username && username != "admin")
+            {
+                return Unauthorized("Only the user that posted this post is allowed to edit it.");
+            }
+
             var localPost = await _context.PostTable.FindAsync(id);
             if(localPost != null)
             {
@@ -160,11 +168,18 @@ namespace GOSM.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<Post>> PostPost(Post post)
         {
+            var username = GetUsernameFromClaims(HttpContext.User.Identity as ClaimsIdentity);
+            var user = (from u in _context.UserTable
+                        where u.Username == username
+                        select u).FirstOrDefault();
+
             if (post.ID != 0)
             {
                 return BadRequest("Post ID should not be provided or left at 0, as it is managed by the database.");
             }
             post.TimeStamp = DateTime.Now;
+            post.User = user;
+
             _context.PostTable.Add(post);
             await _context.SaveChangesAsync();
 
@@ -184,6 +199,16 @@ namespace GOSM.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<Post>> DeletePost(int id)
         {
+            var username = GetUsernameFromClaims(HttpContext.User.Identity as ClaimsIdentity);
+            var user = (from u in _context.UserTable
+                        where u.Username == username
+                        select u).FirstOrDefault();
+
+            if(username != user.Username && username != "admin")
+            {
+                return Unauthorized("Only the user that posted this post may delete it.");
+            }
+
             var post = await _context.PostTable.FindAsync(id);
             if (post == null)
             {
@@ -203,6 +228,17 @@ namespace GOSM.Controllers
         private bool PostExists(int id)
         {
             return _context.PostTable.Any(e => e.ID == id);
+        }
+
+        private string GetUsernameFromClaims(ClaimsIdentity claimsIdentity)
+        {
+            var claims = claimsIdentity.Claims;
+            var usernameClaim = claims.Where(c => c.Type == "Username").FirstOrDefault();
+            if (usernameClaim == null)
+            {
+                throw new NullReferenceException("Authorized user provided no valid username claim. Definitely internal error.");
+            }
+            return usernameClaim.Value;
         }
     }
 }

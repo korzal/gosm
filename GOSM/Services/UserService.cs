@@ -165,7 +165,8 @@ namespace GOSM.Services
             {
                 Subject = new ClaimsIdentity(new Claim[]
                 {
-                    new Claim(ClaimTypes.Name, user.ID.ToString())
+                    //new Claim(ClaimTypes.Name, user.ID.ToString())
+                    new Claim("Username", user.Username)
                 }),
                 Expires = DateTime.UtcNow.AddMinutes(15),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)

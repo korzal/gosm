@@ -39,6 +39,10 @@
     <Compile Remove="Migrations\20201115143045_TestAfterForceRemove.Designer.cs" />
     <Compile Remove="Migrations\20201115143220_TestAfterForceRemove.cs" />
     <Compile Remove="Migrations\20201115143220_TestAfterForceRemove.Designer.cs" />
+    <Compile Remove="Migrations\20201116181454_auth.cs" />
+    <Compile Remove="Migrations\20201116181454_auth.Designer.cs" />
+    <Compile Remove="Migrations\20201117201304_UserRelevantGames_ID_added.cs" />
+    <Compile Remove="Migrations\20201117201304_UserRelevantGames_ID_added.Designer.cs" />
   </ItemGroup>
 
   <ItemGroup>
