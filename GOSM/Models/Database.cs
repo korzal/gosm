@@ -32,7 +32,6 @@ namespace GOSM.Models
                 .WithMany(u => u.UserRelevantGamesList)
                 .HasForeignKey(urg => urg.UserID);
 
-
         }
     }
 }

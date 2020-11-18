@@ -22,7 +22,7 @@ namespace GOSM
                 var services = scope.ServiceProvider;
                 try
                 {
-                    SeedData.Init(services);
+                    //SeedData.Init(services);
                 }
                 catch (Exception ex)
                 {

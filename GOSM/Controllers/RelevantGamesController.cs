@@ -6,12 +6,15 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using GOSM.Models;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace GOSM.Controllers
 {
     [Produces("application/json")]
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(AuthenticationSchemes = Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme)]
     public class RelevantGamesController : ControllerBase
     {
         private readonly Database _context;
@@ -77,6 +80,13 @@ namespace GOSM.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> PutRelevantGames(int id, RelevantGames relevantGames)
         {
+            var username = GetUsernameFromClaims(HttpContext.User.Identity as ClaimsIdentity);
+
+            if(username != "admin")
+            {
+                return Unauthorized("Only the admin may edit the relevant games list.");
+            }
+
             if (id != relevantGames.ID)
             {
                 return BadRequest();
@@ -133,6 +143,13 @@ namespace GOSM.Controllers
         [ProducesResponseType(StatusCodes.Status409Conflict)]
         public async Task<ActionResult<RelevantGames>> PostRelevantGames(RelevantGames relevantGames)
         {
+            var username = GetUsernameFromClaims(HttpContext.User.Identity as ClaimsIdentity);
+
+            if (username != "admin")
+            {
+                return Unauthorized("Only the admin may add relevant games to the list.");
+            }
+
             if (relevantGames.ID != 0)
             {
                 return BadRequest("relevantGames ID should not be provided or left at 0, as it is managed by the database.");
@@ -164,6 +181,13 @@ namespace GOSM.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<RelevantGames>> DeleteRelevantGames(int id)
         {
+            var username = GetUsernameFromClaims(HttpContext.User.Identity as ClaimsIdentity);
+
+            if (username != "admin")
+            {
+                return Unauthorized("Only the admin may delete relevant games from the list.");
+            }
+
             var relevantGames = await _context.RelevantGamesTable.FindAsync(id);
             if (relevantGames == null)
             {
@@ -179,6 +203,17 @@ namespace GOSM.Controllers
         private bool RelevantGamesExists(int id)
         {
             return _context.RelevantGamesTable.Any(e => e.ID == id);
+        }
+
+        private string GetUsernameFromClaims(ClaimsIdentity claimsIdentity)
+        {
+            var claims = claimsIdentity.Claims;
+            var usernameClaim = claims.Where(c => c.Type == "Username").FirstOrDefault();
+            if (usernameClaim == null)
+            {
+                throw new NullReferenceException("Authorized user provided no valid username claim. Definitely internal error.");
+            }
+            return usernameClaim.Value;
         }
     }
 }

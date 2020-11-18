@@ -6,12 +6,15 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using GOSM.Models;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace GOSM.Controllers
 {
     [Produces("application/json")]
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(AuthenticationSchemes = Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme)]
     public class PostsController : ControllerBase
     {
         private readonly Database _context;
@@ -96,7 +99,7 @@ namespace GOSM.Controllers
         public async Task<IActionResult> PutPost(int id, Post post)
         {
             var localPost = await _context.PostTable.FindAsync(id);
-            if(localPost != null)
+            if (localPost != null)
             {
                 _context.Entry(localPost).State = EntityState.Detached;
             }
@@ -104,6 +107,18 @@ namespace GOSM.Controllers
             {
                 return NotFound("Post with the specified ID does not exist.");
             }
+
+            var username = GetUsernameFromClaims(HttpContext.User.Identity as ClaimsIdentity);
+            var postUser = (from u in _context.UserTable
+                            where u.ID == localPost.UserID
+                            select u).FirstOrDefault();
+
+            if(username != postUser.Username && username != "admin")
+            {
+                return Unauthorized("Only the user that posted this post is allowed to edit it.");
+            }
+
+            
             
             if (id != post.ID)
             {
@@ -159,11 +174,18 @@ namespace GOSM.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<Post>> PostPost(Post post)
         {
+            var username = GetUsernameFromClaims(HttpContext.User.Identity as ClaimsIdentity);
+            var user = (from u in _context.UserTable
+                        where u.Username == username
+                        select u).FirstOrDefault();
+
             if (post.ID != 0)
             {
                 return BadRequest("Post ID should not be provided or left at 0, as it is managed by the database.");
             }
             post.TimeStamp = DateTime.Now;
+            post.User = user;
+
             _context.PostTable.Add(post);
             await _context.SaveChangesAsync();
 
@@ -188,6 +210,20 @@ namespace GOSM.Controllers
             {
                 return NotFound();
             }
+
+            var username = GetUsernameFromClaims(HttpContext.User.Identity as ClaimsIdentity);
+
+            var postUser = (from u in _context.UserTable
+                            where u.ID == post.UserID
+                            select u).FirstOrDefault();
+
+
+            if (postUser.Username != username && username != "admin")
+            {
+                return Unauthorized("Only the user that posted this post may delete it.");
+            }
+
+            
             var relatedComments = (from c in _context.CommentTable
                       where c.PostID == id
                       select c).ToList();
@@ -202,6 +238,17 @@ namespace GOSM.Controllers
         private bool PostExists(int id)
         {
             return _context.PostTable.Any(e => e.ID == id);
+        }
+
+        private string GetUsernameFromClaims(ClaimsIdentity claimsIdentity)
+        {
+            var claims = claimsIdentity.Claims;
+            var usernameClaim = claims.Where(c => c.Type == "Username").FirstOrDefault();
+            if (usernameClaim == null)
+            {
+                throw new NullReferenceException("Authorized user provided no valid username claim. Definitely internal error.");
+            }
+            return usernameClaim.Value;
         }
     }
 }
