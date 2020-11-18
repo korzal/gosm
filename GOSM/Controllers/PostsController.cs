@@ -98,14 +98,8 @@ namespace GOSM.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> PutPost(int id, Post post)
         {
-            var username = GetUsernameFromClaims(HttpContext.User.Identity as ClaimsIdentity);
-            if(username != post.User.Username && username != "admin")
-            {
-                return Unauthorized("Only the user that posted this post is allowed to edit it.");
-            }
-
             var localPost = await _context.PostTable.FindAsync(id);
-            if(localPost != null)
+            if (localPost != null)
             {
                 _context.Entry(localPost).State = EntityState.Detached;
             }
@@ -113,6 +107,18 @@ namespace GOSM.Controllers
             {
                 return NotFound("Post with the specified ID does not exist.");
             }
+
+            var username = GetUsernameFromClaims(HttpContext.User.Identity as ClaimsIdentity);
+            var postUser = (from u in _context.UserTable
+                            where u.ID == localPost.UserID
+                            select u).FirstOrDefault();
+
+            if(username != postUser.Username && username != "admin")
+            {
+                return Unauthorized("Only the user that posted this post is allowed to edit it.");
+            }
+
+            
             
             if (id != post.ID)
             {
@@ -199,21 +205,25 @@ namespace GOSM.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<Post>> DeletePost(int id)
         {
-            var username = GetUsernameFromClaims(HttpContext.User.Identity as ClaimsIdentity);
-            var user = (from u in _context.UserTable
-                        where u.Username == username
-                        select u).FirstOrDefault();
-
-            if(username != user.Username && username != "admin")
-            {
-                return Unauthorized("Only the user that posted this post may delete it.");
-            }
-
             var post = await _context.PostTable.FindAsync(id);
             if (post == null)
             {
                 return NotFound();
             }
+
+            var username = GetUsernameFromClaims(HttpContext.User.Identity as ClaimsIdentity);
+
+            var postUser = (from u in _context.UserTable
+                            where u.ID == post.UserID
+                            select u).FirstOrDefault();
+
+
+            if (postUser.Username != username && username != "admin")
+            {
+                return Unauthorized("Only the user that posted this post may delete it.");
+            }
+
+            
             var relatedComments = (from c in _context.CommentTable
                       where c.PostID == id
                       select c).ToList();

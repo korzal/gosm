@@ -159,6 +159,7 @@ namespace GOSM.Controllers
         /// Posts a new comment on a post with a specified ID
         /// </summary>
         /// <param name="comment"></param>
+        /// <param name="postId"></param>
         /// <returns></returns>
         /// <response code="201">If a comment is posted successfully</response>
         /// <response code="400">If all required fields are not filled, or non 0 comment ID is provided</response>
@@ -167,7 +168,7 @@ namespace GOSM.Controllers
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public async Task<ActionResult<Comment>> PostComment(Comment comment)
+        public async Task<ActionResult<Comment>> PostComment(int postId, Comment comment)
         {
             var username = GetUsernameFromClaims(HttpContext.User.Identity as ClaimsIdentity);
             var user = (from u in _context.UserTable
@@ -179,8 +180,14 @@ namespace GOSM.Controllers
                 return BadRequest("Comment ID should not be provided or left at 0, as it is managed by the database.");
             }
 
+            if(postId == 0)
+            {
+                return BadRequest("Comment must be attached to a post.");
+            }
+
             comment.TimeStamp = DateTime.Now;
             comment.User = user;
+            comment.PostID = postId;
 
             _context.CommentTable.Add(comment);
             await _context.SaveChangesAsync();
@@ -204,15 +211,12 @@ namespace GOSM.Controllers
         public async Task<ActionResult<Comment>> DeleteComment(int id)
         {
             var username = GetUsernameFromClaims(HttpContext.User.Identity as ClaimsIdentity);
-            var requestingUser = (from u in _context.UserTable
-                                  where u.Username == username
-                                  select u).FirstOrDefault();
 
             var deletionUser = (from u in _context.UserTable
                                 where u.ID == id
                                 select u).FirstOrDefault();
 
-            if(deletionUser.Username != requestingUser.Username && username != "admin")
+            if(deletionUser.Username != username && username != "admin")
             {
                 return Unauthorized("Only the user that posted this comment may delete it.");
             }

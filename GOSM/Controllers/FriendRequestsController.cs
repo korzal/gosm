@@ -43,7 +43,16 @@ namespace GOSM.Controllers
                                  where u.SenderID == UserId || u.RecipientID == UserId
                                  select u).FirstOrDefault();
 
-            if (friendRequest.Sender.Username != username && friendRequest.Recipient.Username != username && username != "admin")
+            if (friendRequest == null)
+            {
+                return NotFound("No friend requests have been sent or received by provided user.");
+            }
+
+            var requestUser = (from u in _context.UserTable
+                               where u.ID == friendRequest.SenderID || u.ID == friendRequest.RecipientID
+                               select u).FirstOrDefault();
+
+            if (requestUser.Username != username && username != "admin")
             {
                 return Unauthorized("You may only view friend requests you are the sender or recipient of.");
             }
@@ -73,8 +82,16 @@ namespace GOSM.Controllers
             var friendRequest = (from u in _context.FriendRequestTable
                                  where u.SenderID == UserId || u.RecipientID == UserId
                                  select u).FirstOrDefault();
+            if(friendRequest == null)
+            {
+                return NotFound("No friend requests have been sent or received by provided user.");
+            }
 
-            if (friendRequest.Sender.Username != username && friendRequest.Recipient.Username != username && username != "admin")
+            var requestUser = (from u in _context.UserTable
+                               where u.ID == friendRequest.SenderID || u.ID == friendRequest.RecipientID
+                               select u).FirstOrDefault();
+
+            if (requestUser.Username != username && username != "admin")
             {
                 return Unauthorized("You may only view friend requests you are the sender or recipient of.");
             }
@@ -111,7 +128,11 @@ namespace GOSM.Controllers
 
             var username = GetUsernameFromClaims(HttpContext.User.Identity as ClaimsIdentity);
 
-            if (friendRequest.Sender.Username != username && friendRequest.Recipient.Username != username && username != "admin")
+            var requestSender = (from u in _context.UserTable
+                                 where u.ID == friendRequest.SenderID || u.ID == friendRequest.RecipientID
+                                 select u).FirstOrDefault();
+
+            if (requestSender.Username != username && username != "admin")//friendRequest.Recipient.Username != username && username != "admin")
             {
                 return Unauthorized("You may only view friend requests you are the sender or recipient of.");
             }
@@ -139,17 +160,24 @@ namespace GOSM.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> PutFriendRequest(int id, FriendRequest friendRequest)
         {
-            var username = GetUsernameFromClaims(HttpContext.User.Identity as ClaimsIdentity);
-
-            if (friendRequest.Sender.Username != username && friendRequest.Recipient.Username != username && username != "admin")
-            {
-                return Unauthorized("You may only edit friend requests you are the sender or recipient of.");
-            }
+            
 
             if (id != friendRequest.ID)
             {
                 return BadRequest();
             }
+
+            var username = GetUsernameFromClaims(HttpContext.User.Identity as ClaimsIdentity);
+
+            var requestUser = (from u in _context.UserTable
+                               where u.ID == friendRequest.SenderID || u.ID == friendRequest.RecipientID
+                               select u).FirstOrDefault();
+
+            if (requestUser.Username != username && username != "admin")
+            {
+                return Unauthorized("You may only edit friend requests you are the sender or recipient of.");
+            }
+
             friendRequest.Recipient = (from f in _context.FriendRequestTable
                                        where f.ID == friendRequest.ID
                                        select f.Recipient).FirstOrDefault();
@@ -212,7 +240,8 @@ namespace GOSM.Controllers
                                   where u.Username == username
                                   select u).FirstOrDefault();
 
-            if(friendRequest.Sender.Username != requestingUser.Username && friendRequest.Sender.Username != "admin")
+
+            if(username != requestingUser.Username && username != "admin")
             {
                 Unauthorized("You may only post friend requests when you are the sender.");
             }
@@ -274,7 +303,7 @@ namespace GOSM.Controllers
 
             friendRequest.IsAccepted = false;
             friendRequest.RequestDate = DateTime.Now;
-            friendRequest.Sender = requestingUser;
+            //friendRequest.SenderID = UserId;
             _context.FriendRequestTable.Add(friendRequest);
             await _context.SaveChangesAsync();
 
@@ -304,7 +333,11 @@ namespace GOSM.Controllers
 
             var username = GetUsernameFromClaims(HttpContext.User.Identity as ClaimsIdentity);
 
-            if (friendRequest.Sender.Username != username && friendRequest.Recipient.Username != username && username != "admin")
+            var deleteRequest = (from u in _context.UserTable
+                                 where u.ID == friendRequest.SenderID || u.ID == friendRequest.RecipientID
+                                 select u).FirstOrDefault();
+
+            if (deleteRequest.Username != username && username != "admin")
             {
                 return Unauthorized("You may only delete friend requests you are the sender or recipient of.");
             }
