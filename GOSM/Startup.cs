@@ -40,6 +40,7 @@ namespace GOSM
             services.AddCors();
             services.AddControllers().AddJsonOptions(x => x.JsonSerializerOptions.IgnoreNullValues = true);
 
+
             // configure strongly typed settings objects
             var appSettingsSection = Configuration.GetSection("AppSettings");
             services.Configure<AppSettings>(appSettingsSection);
@@ -131,6 +132,9 @@ namespace GOSM
         {
             app.UseDeveloperExceptionPage();
             app.UseSwagger();
+
+            app.UseDefaultFiles();
+            app.UseStaticFiles();
 
             app.UseSwaggerUI(c =>
             {

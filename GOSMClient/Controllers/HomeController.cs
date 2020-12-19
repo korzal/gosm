@@ -5,9 +5,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using GOSM.Models;
+using GOSMClient.Models;
+using Newtonsoft.Json;
+using System.Net.Http;
 
-namespace GOSM.Controllers
+namespace GOSMClient.Controllers
 {
     public class HomeController : Controller
     {
@@ -18,17 +20,21 @@ namespace GOSM.Controllers
             _logger = logger;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            return View();
+            List<RelevantGamesView> gamesList = new List<RelevantGamesView>();
+            using (var httpClient = new HttpClient())
+            {
+                using (var response = await httpClient.GetAsync("http://localhost:44366/api/RelevantGames"))
+                {
+                    string apiResponse = await response.Content.ReadAsStringAsync();
+                    gamesList = JsonConvert.DeserializeObject<List<RelevantGamesView>>(apiResponse);
+                }
+            }
+            return View(gamesList);
         }
 
         public IActionResult Privacy()
-        {
-            return View();
-        }
-
-        public IActionResult Test()
         {
             return View();
         }

@@ -97,6 +97,13 @@ namespace GOSM.Models
                         Password = "topkek",
                         Email = "biden@gmail.com",
                         CreationDate = DateTime.Now
+                    },
+                    new User
+                    {
+                        Username = "admin",
+                        Password = "admin",
+                        Email = "admin@gmail.com",
+                        CreationDate = DateTime.Now
                     }
                 );
                 context.SaveChanges();
