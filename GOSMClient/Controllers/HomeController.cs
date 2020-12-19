@@ -25,7 +25,7 @@ namespace GOSMClient.Controllers
             List<RelevantGamesView> gamesList = new List<RelevantGamesView>();
             using (var httpClient = new HttpClient())
             {
-                using (var response = await httpClient.GetAsync("http://localhost:44366/api/RelevantGames"))
+                using (var response = await httpClient.GetAsync("https://gosmnew.azurewebsites.net/api/RelevantGames"))
                 {
                     string apiResponse = await response.Content.ReadAsStringAsync();
                     gamesList = JsonConvert.DeserializeObject<List<RelevantGamesView>>(apiResponse);
