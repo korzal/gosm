@@ -6,12 +6,16 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using GOSM.Models;
+using System.Net.Http;
+using Newtonsoft.Json;
+using System.Text;
 
 namespace GOSM.Controllers
 {
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
+        private string APIUri = "https://localhost:44366/api/RelevantGames/";
 
         public HomeController(ILogger<HomeController> logger)
         {
@@ -23,15 +27,8 @@ namespace GOSM.Controllers
             return View();
         }
 
-        public IActionResult Privacy()
-        {
-            return View();
-        }
-
-        public IActionResult Test()
-        {
-            return View();
-        }
+        //
+        
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()

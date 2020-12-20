@@ -1,4 +1,6 @@
-﻿<!DOCTYPE html>
+﻿@using System.Security.Claims
+@using Microsoft.AspNetCore.Http;
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -10,14 +12,27 @@
     <link rel="stylesheet" href="https://www.w3schools.com/lib/w3-theme-blue-grey.css">
     <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Open+Sans'>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Trirong">
+    <style>
+        body, content, h1, h2, h3, h4, h5{
+            font-family: "Trirong", serif;
+        }
+    </style>
 </head>
-<body>
+<body class="body">
 
 
     <header>
-        
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-info border-bottom box-shadow mb-3">
             <div class="container">
+                <div class="justify-content-center">
+                    <svg width="80" height="80">
+                        <circle cx="40" cy="40" r="30" stroke="yellow" stroke-width="4" fill="red" />
+                        <text fill="#ffffff" font-size="12" font-family="Verdana" x="23" y="45">GOSM</text>
+                    </svg>
+                </div>
+                
                 <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">GOSM</a>
                 <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Toggle navigation">
@@ -25,15 +40,43 @@
                 </button>
                 <div class="navbar-collapse collapse d-sm-inline-flex flex-sm-row-reverse">
                     <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Test">Privacy</a>
-                        </li>
+                        @{
+                            var cookies = Context.Request.Cookies.FirstOrDefault(c => c.Key == "Username");
+                        }
+                        @if (cookies.Value == null)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark " asp-area="" asp-controller="LoginView" asp-action="Login">Login</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="LoginView" asp-action="Register">Register</a>
+                            </li>
+
+                        }
+
+                        @if (cookies.Value == "admin")
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="RelevantGamesView" asp-action="RelevantGamesList">Relevant Games</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="UserView" asp-action="UserList">User List</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="PostView" asp-action="PostList">Posts</a>
+                            </li>
+
+                        }
+                        else if (cookies.Value != null)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="UserView" asp-action="UserList">User List</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="PostView" asp-action="PostList">Posts</a>
+                            </li>
+
+                        }
                     </ul>
                 </div>
             </div>
@@ -44,12 +87,17 @@
     <div class="container">
         <main role="main" class="pb-3">
             @RenderBody()
+            <br />
+            <br />
+            <br />
+            <br />
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
+    <footer class="border-top footer text-muted position-absolute bg-info">
         <div class="container">
-            &copy; 2020 - GOSM - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            <text class="text-black-50 text-b"><h3>&copy; 2020 - GOSM</h3></text>
+            
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
@@ -58,15 +106,15 @@
     @RenderSection("Scripts", required: false)
 
     <script>
-    // Used to toggle the menu on smaller screens when clicking on the menu button
-    function openNav() {
-    var x = document.getElementById("navDemo");
-    if (x.className.indexOf("w3-show") == -1) {
-    x.className += " w3-show";
-    } else {
-    x.className = x.className.replace(" w3-show", "");
-    }
-    }
+        // Used to toggle the menu on smaller screens when clicking on the menu button
+        function openNav() {
+            var x = document.getElementById("navDemo");
+            if (x.className.indexOf("w3-show") == -1) {
+                x.className += " w3-show";
+            } else {
+                x.className = x.className.replace(" w3-show", "");
+            }
+        }
     </script>
 </body>
 </html>

@@ -47,11 +47,12 @@ namespace GOSM.Services
             var refreshToken = generateRefreshToken(ipAddress);
 
             // save refresh token
+            user.JwtToken = jwtToken;
             user.RefreshTokens.Add(refreshToken);
             _context.Update(user);
             _context.SaveChanges();
 
-            return new AuthenticateResponse(user, jwtToken, refreshToken.Token);
+            return new AuthenticateResponse() {Username = user.Username, ID = user.ID, JwtToken = jwtToken, RefreshToken = refreshToken.Token };
         }
 
         public AuthenticateResponse RefreshToken(string token, string ipAddress)
@@ -78,7 +79,7 @@ namespace GOSM.Services
             // generate new jwt
             var jwtToken = generateJwtToken(user);
 
-            return new AuthenticateResponse(user, jwtToken, newRefreshToken.Token);
+            return new AuthenticateResponse() { Username = user.Username, ID = user.ID, JwtToken = jwtToken, RefreshToken = refreshToken.Token }; ;
         }
 
         public bool RevokeToken(string token, string ipAddress)

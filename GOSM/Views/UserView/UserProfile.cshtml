@@ -1,0 +1,103 @@
+﻿@model User
+@{ Layout = "_Layout"; ViewBag.Title = "User profile";}
+
+<h2>@Model.Username's profile. </h2>
+<form method="post">
+    <div class="form-group">
+        <label asp-for="ID"></label>
+        <input class="form-control" asp-for="ID" readonly />
+    </div>
+    <div class="form-group">
+        <label asp-for="Username">Username: </label>
+        <input class="form-control" asp-for="Username" readonly />
+    </div>
+    <div class="form-group">
+        <label asp-for="Email">Email: </label>
+        <input class="form-control" asp-for="Email" />
+    </div>
+    <div class="form-group">
+        <label asp-for="Password">Password: </label>
+        <input class="form-control" asp-for="Password" type="password" />
+    </div>
+    <div class="text-center panel-body">
+        <button type="submit" class="btn btn-sm btn-primary">Update</button>
+    </div>
+</form>
+
+@if (Model.UserRelevantGamesList != null)
+{
+    <h2>Relevant games</h2>
+    <table class="table table-sm table-striped table-bordered m-2">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Genre</th>
+                <th>Delete</th>
+            </tr>
+        </thead>
+        <tbody>
+                @foreach (var game in Model.UserRelevantGamesList)
+                {
+                    if (game.UserID == Model.ID)
+                    {
+                        <tr>
+                        <td>@game.RelevantGames.Title</td>
+                        <td>@game.RelevantGames.Genre</td>
+                        <td>
+                            <form asp-action="UserDeleteGame" method="post">
+                                <input type="hidden" value="@game.RelevantGamesID" name="gameId" />
+                                <input type="image" src="/icon/close.png" />
+                            </form>
+                        </td>
+                        </tr>
+                    }
+                }
+                
+        </tbody>
+    </table>
+    <style>
+        .button {
+            border-radius: 4px;
+            background-color: #0275d8;
+            border: none;
+            color: #FFFFFF;
+            text-align: center;
+            font-size: 28px;
+            padding: 20px;
+            width: 200px;
+            transition: all 0.5s;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        .button span {
+            cursor: pointer;
+            display: inline-block;
+            position: relative;
+            transition: 0.5s;
+        }
+
+       .button span:after {
+            content: '\00bb';
+            position: absolute;
+            opacity: 0;
+            top: 0;
+            right: -20px;
+            transition: 0.5s;
+        }
+
+        .button:hover span {
+            padding-right: 25px;
+        }
+
+        .button:hover span:after {
+            opacity: 1;
+            right: 0;
+        }
+    </style>
+    <br />
+    <br />
+    <div class="text-center panel-body">
+        <a class="button" asp-action="UserAddGame"><span>Add New Game </span></a>
+    </div>
+}

@@ -1,0 +1,14 @@
+﻿@model RelevantGames
+@{ Layout = "_Layout"; ViewBag.Title = "Add new relevant game";}
+
+<h2>Add a Relevant game to your list. </h2>
+
+<form asp-action="UserAddGame" method="post">
+    <label for="Title">Games:</label>
+    <div class="form-group">
+        <select asp-for="ID" required class="form-control" asp-items="ViewBag.GameID"></select>
+    </div>
+    <div class="text-center panel-body">
+        <button type="submit" class="btn btn-sm btn-primary">Add game</button>
+    </div>
+</form>

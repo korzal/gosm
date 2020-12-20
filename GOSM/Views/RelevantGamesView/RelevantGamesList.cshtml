@@ -1,0 +1,40 @@
+﻿@model IEnumerable<RelevantGames>
+@{ Layout = "_Layout"; ViewBag.Title = "All RelevantGames";}
+
+<h2>All Relevant Games</h2>
+<a asp-action="AddRelevantGame" class="btn btn-sm btn-primary">Add Game</a>
+<a asp-action="GetRelevantGame" class="btn btn-sm btn-secondary">Get Game</a>
+
+<table class="table table-sm table-striped table-bordered m-2">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Title</th>
+            <th>Genre</th>
+            <th>Update</th>
+            <th>Delete</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var r in Model)
+        {
+        <tr>
+            <td>@r.ID</td>
+            <td>@r.Title</td>
+            <td>@r.Genre</td>
+            <td>
+                <a asp-action="UpdateRelevantGame" asp-route-id="@r.ID" class="btn btn-primary align-content-lg-center">Update Game</a>
+            </td>
+            
+            <td>
+                <form asp-action="DeleteRelevantGame" method="post">
+                    <input type="hidden" value="@r.ID" name="ID" />
+
+                    <input type="image" src="/icon/close.png" />
+                </form>
+
+            </td>
+        </tr>
+        }
+    </tbody>
+</table>
