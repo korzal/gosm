@@ -215,8 +215,11 @@ namespace GOSM.Controllers
             var deletionUser = (from u in _context.UserTable
                                 where u.ID == id
                                 select u).FirstOrDefault();
-
-            if(deletionUser.Username != username && username != "admin")
+            if(deletionUser == null)
+            {
+                //idk what this is even for
+            }
+            else if(deletionUser.Username != username && username != "admin")
             {
                 return Unauthorized("Only the user that posted this comment may delete it.");
             }

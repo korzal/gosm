@@ -1,0 +1,73 @@
+﻿@model IEnumerable<User>
+@{ Layout = "_Layout"; ViewBag.Title = "All RelevantGames";}
+
+<h2>User list</h2>
+
+    <table class="table table-sm table-striped table-bordered m-2">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Username</th>
+                <th>Relevant games</th>
+                <th>Update</th>
+                <th>Delete</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var r in Model)
+            {
+                var tm = "#myModal" + r.ID;
+                var mid = "myModal" + r.ID;
+            <tr>
+                
+                <td>@r.ID</td>
+                <td>@r.Username</td>
+                <td>
+                    @foreach (var game in r.UserRelevantGamesList)
+                    {
+                        if (game.UserID == r.ID)
+                        {
+                            @game.RelevantGames.Title
+                            <br />
+                        }
+                    }
+               </td>
+                <td>
+                    <a asp-action="UserProfile" asp-route-id="@r.ID" class="btn btn-primary align-content-lg-center">Update User</a>
+                </td>
+                <td>
+                    <button type="button" class="btn btn-danger" data-toggle="modal" data-target="@tm">Delete user</button>
+
+                    <div class="modal fade" id="@mid" tabindex="-1" role="dialog">
+                        <div class="modal-dialog" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Confirmation window</h5>
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                                <div class="modal-body">
+                                    <p>Are you sure you want to delete this user?</p>
+                                </div>
+                                <div class="modal-footer">
+                                    <form asp-action="DeleteUser">
+                                        <input type="number" value="@r.ID" name="id" hidden/>
+                                        <button type="submit" class="btn btn-danger">Delete</button>
+                                    </form>
+                                    
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            }
+        </tbody>
+    </table>
+
+    
+
+

@@ -1,0 +1,58 @@
+﻿@model IEnumerable<Post>
+@{ Layout = "_Layout"; ViewBag.Title = "Posts";}
+
+
+@foreach (var post in Model)
+{
+<div class="w3-container w3-card w3-theme-d2 w3-round w3-margin-bottom">
+    <h3>Post</h3>
+    <div class="bg-info border-primary justify-content-center w3-margin-bottom">
+        <span class="w3-right w3-opacity">@post.TimeStamp</span>
+        <h4>@post.User.Username</h4>
+        @post.Text
+        <br>
+    </div>
+    @if (post.CommentList.FirstOrDefault() != null)
+    {
+        <h3>Comments</h3>
+    }
+
+    @foreach (var comment in post.CommentList)
+    {
+        <div class="w3-container bg-info justify-content-center w3-margin-bottom">
+            <span class="w3-right w3-opacity">@comment.TimeStamp</span>
+            @{
+                var cookies = Context.Request.Cookies.FirstOrDefault(c => c.Key == "Username");
+            }
+            @if(cookies.Value == comment.User.Username)
+            {
+            <div class="w3-right w3-opacity">
+                <form asp-action="DeleteComment">
+                    <input type="number" value="@comment.ID" name="commentId" hidden />
+                    <input type="number" value="@post.ID" name="postId" hidden />
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+             
+            }
+
+            <h5>@comment.User.Username</h5>
+            @comment.Text
+        </div>
+    }
+    <div class="w3-container ">
+        <form asp-action="CreateComment">
+            <fieldset>
+                <textarea class="w-75" name="comment" placeholder="Enter your comment here.." style="height:200px"></textarea>
+                <input type="number" name="ID" value="@post.ID" hidden/>
+            </fieldset>
+            <button type="submit" class="w3-button w3-theme-d2 w3-margin-bottom"><i class="fa fa-comment"></i>  Comment</button>
+        </form>
+    </div>
+    
+</div>
+}
+
+
+    
+    

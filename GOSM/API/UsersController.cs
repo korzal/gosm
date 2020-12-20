@@ -16,7 +16,7 @@ namespace GOSM.Controllers
     [Produces("application/json")]
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(AuthenticationSchemes = Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme)]
+    
     public class UsersController : ControllerBase
     {
         private readonly Database _context;
@@ -39,6 +39,7 @@ namespace GOSM.Controllers
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        //[Authorize(AuthenticationSchemes = Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme)]
         public async Task<ActionResult<IEnumerable<User>>> GetUserTable()
         {
             return await _context.UserTable
@@ -61,6 +62,7 @@ namespace GOSM.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [Authorize(AuthenticationSchemes = Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme)]
         public async Task<ActionResult<User>> GetUser(int id)
         {
             var user = await _context.UserTable.FindAsync(id);
@@ -94,9 +96,10 @@ namespace GOSM.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        //[Authorize(AuthenticationSchemes = Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme)]
         public async Task<IActionResult> PutUser(int id, User user)
         {
-            var username = GetUsernameFromClaims(HttpContext.User.Identity as ClaimsIdentity);
+            //var username = GetUsernameFromClaims(HttpContext.User.Identity as ClaimsIdentity);
 
             //var checkUser = await _context.UserTable.FindAsync(user.ID);
             if (id != user.ID)
@@ -109,10 +112,10 @@ namespace GOSM.Controllers
                 return BadRequest("Invalid model object.");
             }
 
-            if (username != user.Username && username != "admin")
-            {
-                return Unauthorized("Only the user can edit his own info.");
-            }
+            //if (username != user.Username && username != "admin")
+            //{
+            //    return Unauthorized("Only the user can edit his own info.");
+            //}
 
             var queryExisting = _context.UserTable
                 .Where(u => EF.Functions.Like(u.Username, user.Username)).FirstOrDefault();
@@ -120,6 +123,10 @@ namespace GOSM.Controllers
             if(queryExisting != null && queryExisting.Username != user.Username)
             {
                 return Conflict("Username already exists.");
+            }
+            if(queryExisting != null)
+            {
+                _context.Entry(queryExisting).State = EntityState.Detached;
             }
 
             user.CreationDate = _context.UserTable
@@ -203,6 +210,7 @@ namespace GOSM.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status409Conflict)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [Authorize(AuthenticationSchemes = Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme)]
         public async Task<ActionResult<UserRelevantGames>> PostRelevantGame(int id, UserRelevantGames relevantGame)
         {
             var username = GetUsernameFromClaims(HttpContext.User.Identity as ClaimsIdentity);
@@ -211,6 +219,10 @@ namespace GOSM.Controllers
             if (checkUser == null)
             {
                 return NotFound("User with specified UserId was not found.");
+            }
+            else
+            {
+                _context.Entry(checkUser).State = EntityState.Detached;
             }
 
             if (!ModelState.IsValid)
@@ -252,6 +264,7 @@ namespace GOSM.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [Authorize(AuthenticationSchemes = Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme)]
         public async Task<ActionResult<UserRelevantGames>> DeleteRelevantGame(int id, int gameId)
         {
             var username = GetUsernameFromClaims(HttpContext.User.Identity as ClaimsIdentity);
@@ -295,6 +308,7 @@ namespace GOSM.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [Authorize(AuthenticationSchemes = Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme)]
         public async Task<ActionResult<User>> DeleteUser(int id)
         {
             var username = GetUsernameFromClaims(HttpContext.User.Identity as ClaimsIdentity);

@@ -1,0 +1,29 @@
+﻿@using GOSM.Models
+@model AuthenticateRequest
+@{ Layout = "_Layout"; ViewBag.Title = "Login";}
+
+<h2>Enter your account details. </h2>
+<form method="post" asp-controller="LoginView" asp-action="Login">
+    <div class="form-group">
+        <label for="Username">Username:</label>
+        <input asp-for="Username" class="form-control" name="Username" />
+        <span asp-validation-for="Username"></span>
+    </div>
+    <div class="form-group">
+        <label for="Password">Password:</label>
+        <input asp-for="Password" type="password" class="form-control" name="Password" />
+        <span asp-validation-for="Password"></span>
+    </div>
+    <div class="text-center panel-body">
+        <button type="submit" class="btn btn-sm btn-primary">Login</button>
+    </div>
+</form>
+
+@if (ViewBag.Result == "BadReq")
+{
+    <br />
+    <br />
+    <div class="alert alert-danger" role="alert">
+        Username and password combination is invalid!
+    </div>
+}

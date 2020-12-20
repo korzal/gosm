@@ -1,0 +1,35 @@
+﻿@model RelevantGames
+@{ Layout = "_Layout"; ViewBag.Title = "Get Relevant game by ID";}
+
+<h2>Get Relevant game by ID </h2>
+<form method="post">
+    <div class="form-group">
+        <label for="id">ID:</label>
+        <input class="form-control" name="id" />
+    </div>
+    <div class="text-center panel-body">
+        <button type="submit" class="btn btn-sm btn-primary">Get Relevant game</button>
+        <a asp-action="RelevantGamesList" class="btn btn-sm btn-primary">Back</a>
+    </div>
+</form>
+
+@if (Model != null)
+{
+<h2>Relevant game</h2>
+    <table class="table table-sm table-striped table-bordered m-2">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Title</th>
+                <th>Genre</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>@Model.ID</td>
+                <td>@Model.Title</td>
+                <td>@Model.Genre</td>
+            </tr>
+        </tbody>
+    </table>
+}

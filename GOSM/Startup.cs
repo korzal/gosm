@@ -40,6 +40,7 @@ namespace GOSM
             services.AddCors();
             services.AddControllers().AddJsonOptions(x => x.JsonSerializerOptions.IgnoreNullValues = true);
 
+
             // configure strongly typed settings objects
             var appSettingsSection = Configuration.GetSection("AppSettings");
             services.Configure<AppSettings>(appSettingsSection);
@@ -115,10 +116,26 @@ namespace GOSM
                     }
                 });
 
+                
+
                 // Set the comments path for the Swagger JSON and UI.
                 var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
                 var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
                 c.IncludeXmlComments(xmlPath);
+            });
+
+            //services.ConfigureApplicationCookie(c =>
+            //{
+            //    c.Cookie.htt
+            //});
+
+            services.AddDistributedMemoryCache();
+
+            services.AddSession(options =>
+            {
+                options.Cookie.Name = "GOSM.Session";
+                options.IdleTimeout = TimeSpan.FromSeconds(10000);
+                options.Cookie.IsEssential = true;
             });
 
             services.AddControllers()
@@ -131,6 +148,10 @@ namespace GOSM
         {
             app.UseDeveloperExceptionPage();
             app.UseSwagger();
+            app.UseSession();
+
+            app.UseDefaultFiles();
+            app.UseStaticFiles();
 
             app.UseSwaggerUI(c =>
             {

@@ -34,6 +34,12 @@ namespace GOSM.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<ActionResult<IEnumerable<RelevantGames>>> GetRelevantGamesTable()
         {
+            //var username = GetUsernameFromClaims(HttpContext.User.Identity as ClaimsIdentity);
+            //var sth = User.Identity.IsAuthenticated;
+            //if (username != "admin")
+            //{
+            //    return Unauthorized("Only the admin may add relevant games to the list.");
+            //}
             return await _context.RelevantGamesTable
                 //.Include(u => u.UserRelevantGamesList)
                 .ToListAsync();
@@ -52,7 +58,11 @@ namespace GOSM.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<RelevantGames>> GetRelevantGames(int id)
         {
-            var relevantGames = await _context.RelevantGamesTable.FindAsync(id);
+            var relevantGames = await _context.RelevantGamesTable.AsNoTracking().FirstOrDefaultAsync(x => x.ID == id);
+            //if(relevantGames != null)
+            //{
+            //    _context.Entry(relevantGames).State = EntityState.Detached;
+            //}
 
             if (relevantGames == null)
             {
@@ -82,7 +92,7 @@ namespace GOSM.Controllers
         {
             var username = GetUsernameFromClaims(HttpContext.User.Identity as ClaimsIdentity);
 
-            if(username != "admin")
+            if (username != "admin")
             {
                 return Unauthorized("Only the admin may edit the relevant games list.");
             }
@@ -100,12 +110,21 @@ namespace GOSM.Controllers
             var queryExisting = _context.RelevantGamesTable
                 .Where(g => EF.Functions.Like(g.Title, relevantGames.Title)).FirstOrDefault();
 
-            if (queryExisting != null)
+            if (queryExisting != null && queryExisting.Title != relevantGames.Title)
             {
                 return Conflict("The title already exists.");
             }
+            if(queryExisting != null)
+            {
+                _context.Entry(queryExisting).State = EntityState.Detached;
+            }
+            if (relevantGames != null)
+            {
+                _context.Entry(relevantGames).State = EntityState.Detached;
+            }
 
             _context.Entry(relevantGames).State = EntityState.Modified;
+            //_context.RelevantGamesTable.Update(relevantGames);
 
             try
             {

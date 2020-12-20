@@ -23,6 +23,8 @@ namespace GOSM.Models
         public string Email { get; set; }
         public DateTime CreationDate { get; set; }
         public virtual ICollection<UserRelevantGames> UserRelevantGamesList { get; set; }
+        [IgnoreDataMember]
+        public string JwtToken { get; set; }
 
         [IgnoreDataMember]
         public List<RefreshToken> RefreshTokens { get; set; }
